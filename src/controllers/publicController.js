@@ -47,4 +47,36 @@ async function placePublicOrder(req, res) {
   res.status(201).json(bundle);
 }
 
-module.exports = { getPublicMenu, placePublicOrder };
+async function trackPublicOrder(req, res) {
+  const restaurant = await resolveActiveRestaurant(req.params.slug);
+  if (!restaurant) return res.status(404).json({ message: 'Restaurant not found' });
+
+  const orderNumber = String(req.params.orderNumber || '').trim();
+  if (!orderNumber) return res.status(400).json({ message: 'Order number is required' });
+
+  const Order = require('../models/Order');
+  const OrderItem = require('../models/OrderItem');
+  const order = await Order.findOne({
+    tenantId: restaurant._id,
+    orderNumber,
+  });
+  if (!order) return res.status(404).json({ message: 'Order not found' });
+
+  // Optional phone check if provided (extra safety, not required)
+  const phone = String(req.query.phone || '').trim();
+  if (phone && order.customerPhone && order.customerPhone !== phone) {
+    return res.status(404).json({ message: 'Order not found' });
+  }
+
+  const items = await OrderItem.find({ tenantId: restaurant._id, orderId: order._id });
+  res.json({
+    restaurant: {
+      name: restaurant.name,
+      phone: restaurant.phone,
+    },
+    order,
+    items,
+  });
+}
+
+module.exports = { getPublicMenu, placePublicOrder, trackPublicOrder };

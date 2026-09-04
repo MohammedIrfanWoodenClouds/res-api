@@ -1,13 +1,11 @@
 const r = require('express').Router();
+const c = require('../controllers/invoiceController');
 const { authenticate, requireRole } = require('../middleware/auth');
 const { requireTenant } = require('../middleware/tenant');
-const reportService = require('../services/reportService');
 
 r.use(authenticate, requireRole('RESTAURANT'), requireTenant);
-
-r.get('/me', async (req, res) => {
-  const data = await reportService.dashboard(req.user.tenantId);
-  res.json({ user: req.user, ...data });
-});
+r.get('/', c.list);
+r.get('/:id', c.getOne);
+r.post('/bill/:orderId', c.bill);
 
 module.exports = r;

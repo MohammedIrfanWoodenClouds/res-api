@@ -1,3 +1,37 @@
-const bcrypt=require('bcryptjs');const User=require('../models/User');
-async function seed(){const email=String(process.env.SUPER_ADMIN_EMAIL||'').trim().toLowerCase();const password=String(process.env.SUPER_ADMIN_PASSWORD||'');if(!email||!password){console.warn('Super admin seed skipped: SUPER_ADMIN_EMAIL/PASSWORD missing');return;}const existing=await User.findOne({email});if(existing){if(existing.role!=='SUPER_ADMIN')console.warn('Configured super-admin email belongs to another role');return;}await User.create({email,passwordHash:await bcrypt.hash(password,12),role:'SUPER_ADMIN',tenantId:null});console.log(`Super admin seeded: ${email}`);}
-module.exports=seed;
+const bcrypt = require('bcryptjs');
+const User = require('../models/User');
+
+async function seed() {
+  const email = String(process.env.SUPER_ADMIN_EMAIL || '')
+    .trim()
+    .toLowerCase();
+  const password = String(process.env.SUPER_ADMIN_PASSWORD || '');
+  if (!email || !password) {
+    console.warn('Super admin seed skipped: SUPER_ADMIN_EMAIL/PASSWORD missing');
+    return;
+  }
+
+  const existing = await User.findOne({ email });
+  if (existing) {
+    if (existing.role !== 'SUPER_ADMIN') {
+      console.warn('Configured super-admin email belongs to another role');
+      return;
+    }
+    // Keep password in sync with .env on startup (dev convenience)
+    existing.passwordHash = await bcrypt.hash(password, 12);
+    existing.isActive = true;
+    await existing.save();
+    console.log(`Super admin password synced from .env: ${email}`);
+    return;
+  }
+
+  await User.create({
+    email,
+    passwordHash: await bcrypt.hash(password, 12),
+    role: 'SUPER_ADMIN',
+    tenantId: null,
+  });
+  console.log(`Super admin seeded: ${email}`);
+}
+
+module.exports = seed;

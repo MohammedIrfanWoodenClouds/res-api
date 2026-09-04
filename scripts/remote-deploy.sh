@@ -14,7 +14,7 @@ git fetch origin
 git checkout master
 git reset --hard origin/master
 
-npm install --omit=dev
+npm ci --omit=dev --no-audit --no-fund
 mkdir -p uploads
 
 sudo systemctl daemon-reload

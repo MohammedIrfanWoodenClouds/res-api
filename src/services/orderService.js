@@ -122,7 +122,8 @@ async function getOrderBundle(tenantId, orderId) {
   const order = await Order.findOne({ _id: orderId, tenantId });
   if (!order) return null;
   const items = await OrderItem.find({ tenantId, orderId: order._id });
-  return { order, items };
+  const kot = order.kotId ? await Kot.findOne({ _id: order.kotId, tenantId }) : null;
+  return { order, items, kot };
 }
 
 async function listOrders(tenantId, { status, from, to } = {}) {

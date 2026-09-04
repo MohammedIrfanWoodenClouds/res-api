@@ -1,0 +1,1 @@
+const r=require('express').Router();const {authenticate,requireRole}=require('../middleware/auth');const {requireTenant}=require('../middleware/tenant');r.use(authenticate,requireRole('RESTAURANT'),requireTenant);r.get('/me',(req,res)=>res.json({user:req.user,metrics:{sales:0,orders:0,pendingKot:0,expenses:0,netProfit:0}}));module.exports=r;
